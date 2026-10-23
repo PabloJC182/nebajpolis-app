@@ -3,7 +3,7 @@
 import CrudTable from '@/components/admin/CrudTable';
 import { api } from '@/lib/api';
 import { obtenerVenta } from '@/lib/booking';
-import { imprimirVenta, leerReciboPref } from '@/lib/imprimir';
+import { imprimirVenta, prepararImpresora, leerReciboPref } from '@/lib/imprimir';
 
 const ESTADO = { paid: 'Pagada', pending: 'Pendiente', expired: 'Vencida', cancelled: 'Cancelada', refunded: 'Reembolsada' };
 const cfg = {
@@ -26,7 +26,7 @@ const cfg = {
       mostrar: (v) => v.status === 'paid',
       onClick: async (v, { error }) => {
         error('');
-        try { await imprimirVenta(await obtenerVenta(v.id), { recibo: leerReciboPref() }); }
+        try { await prepararImpresora(); await imprimirVenta(await obtenerVenta(v.id), { recibo: leerReciboPref() }); }
         catch (e) { error(e.message); }
       },
     },

@@ -4,9 +4,19 @@ import QRCode from 'qrcode';
 // Un ticket por entrada (cada una con su QR), un ticket aparte para la comida y, opcional, un recibo resumen.
 const TZ = 'America/Guatemala';
 const KEY = 'imprimirRecibo';
+const KEY_MODO = 'impresoraModo'; // 'navegador' (diálogo de impresión) | 'usb' (ESC/POS directo)
 
 export const leerReciboPref = () => { try { return localStorage.getItem(KEY) === '1'; } catch { return false; } };
 export const guardarReciboPref = (v) => { try { localStorage.setItem(KEY, v ? '1' : '0'); } catch {} };
+
+export const leerModoPref = () => { try { return localStorage.getItem(KEY_MODO) === 'usb' ? 'usb' : 'navegador'; } catch { return 'navegador'; } };
+export const guardarModoPref = (m) => { try { localStorage.setItem(KEY_MODO, m); } catch {} };
+// En modo USB hay que pedir el permiso dentro del clic: se llama antes de cualquier espera de red
+export async function prepararImpresora(modo = leerModoPref()) {
+  if (modo !== 'usb') return;
+  const { obtenerImpresora } = await import('@/lib/escpos');
+  await obtenerImpresora();
+}
 
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const Q = (n) => `Q${Number(n).toFixed(2)}`;
@@ -84,8 +94,9 @@ function recibo(venta) {
 }
 
 // Imprime los tickets de una venta pagada. Devuelve la cantidad de tickets impresos.
-export async function imprimirVenta(venta, { recibo: conRecibo = false } = {}) {
+export async function imprimirVenta(venta, { recibo: conRecibo = false, modo = leerModoPref() } = {}) {
   if (venta.status && venta.status !== 'paid') throw new Error('Solo se pueden imprimir ventas pagadas.');
+  if (modo === 'usb') return (await import('@/lib/escpos')).imprimirVentaUSB(venta, { recibo: conRecibo });
   const partes = [];
   for (const t of venta.tickets ?? []) partes.push(await ticketEntrada(venta, t));
   if (venta.pickupCode) partes.push(await ticketComida(venta));
