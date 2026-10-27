@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { api } from '@/lib/api';
+import { leerUsuario } from '@/lib/roles';
 
 const Q = (n) => `Q${Number(n ?? 0).toLocaleString('es-GT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
@@ -63,6 +64,12 @@ export default function AdminResumen() {
   const [s, setS] = useState(null);
   const [dias, setDias] = useState(14);
   const [error, setError] = useState('');
+  const [esAdmin, setEsAdmin] = useState(false);
+  const [alertas, setAlertas] = useState([]);
+  useEffect(() => setEsAdmin(leerUsuario()?.role === 'admin'), []);
+  useEffect(() => {
+    if (esAdmin) api('/inventario').then((r) => setAlertas(r.filter((i) => i.agotado || i.bajo))).catch(() => {});
+  }, [esAdmin]);
 
   useEffect(() => {
     setS(null);
@@ -92,6 +99,16 @@ export default function AdminResumen() {
         <Tarjeta label="Clientes" valor={s.totales.clientes} />
       </div>
 
+      {alertas.length > 0 && (
+        <section className="rounded-xl p-4 border border-amber-800/50 bg-amber-950/20" aria-label="Inventario por reponer">
+          <div className="flex items-center justify-between gap-3 flex-wrap">
+            <p className="text-sm font-bold text-amber-200">Inventario por reponer ({alertas.length})</p>
+            <Link href="/admin/inventario" className="text-xs font-bold uppercase tracking-wider text-amber-300 hover:text-white">Ir a Inventario</Link>
+          </div>
+          <p className="text-xs text-amber-100/80 mt-1">{alertas.map((i) => `${i.name}${i.agotado ? ' (AGOTADO)' : ` (${i.stock})`}`).join(' · ')}</p>
+        </section>
+      )}
+
       <section className="bg-[#121318] border border-neutral-800/80 rounded-xl p-5">
         <div className="flex items-baseline justify-between mb-4">
           <h2 className="text-xs uppercase tracking-wider text-neutral-400 font-bold">Ingresos por día</h2>
@@ -120,10 +137,10 @@ export default function AdminResumen() {
         </section>
       </div>
 
-      <div className="flex flex-wrap gap-3 text-xs">
+      {esAdmin ? <div className="flex flex-wrap gap-3 text-xs">
         <Link href="/admin/validar" className="px-4 py-2 rounded-full bg-purple-600 hover:bg-purple-500 font-bold uppercase tracking-wider">Validar entradas</Link>
         <Link href="/admin/ventas" className="px-4 py-2 rounded-full border border-neutral-700 hover:border-white font-bold uppercase tracking-wider">Ver ventas</Link>
-      </div>
+      </div> : <div className="flex flex-wrap gap-3 text-xs"><Link href="/admin/reportes" className="px-4 py-2 rounded-full bg-purple-600 hover:bg-purple-500 font-bold uppercase tracking-wider">Ir a Reportes</Link></div>}
     </div>
   );
 }

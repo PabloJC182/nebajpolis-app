@@ -2,7 +2,7 @@ import { tokenInvitado } from '@/lib/guest';
 // Cliente HTTP hacia cine-api (los errores del back traen { message })
 // Acepta la URL con o sin "/api" al final (el back cuelga todo de /api)
 const BASE = (process.env.NEXT_PUBLIC_API_URL || 'https://nebajpolis-api.onrender.com/api').replace(/\/+$/, '');
-const API_URL = BASE.endsWith('/api') ? BASE : `${BASE}/api`;
+export const API_URL = BASE.endsWith('/api') ? BASE : `${BASE}/api`;
 
 // Id de venta al que se refiere la peticion (para adjuntar el token de invitado)
 function ventaDe(ruta, opciones) {

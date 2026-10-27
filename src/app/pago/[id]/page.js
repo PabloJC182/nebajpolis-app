@@ -85,6 +85,9 @@ function Resumen({ venta }) {
           <span className="text-neutral-200 font-semibold">{dinero(l.quantity * l.unitPrice)}</span>
         </div>
       ))}
+      {Number(venta.discountAmount) > 0 && (
+        <div className="flex justify-between text-sm text-emerald-400"><span>{venta.comboId ? 'Ahorro del combo' : 'Cupón aplicado'}</span><span>−{dinero(venta.discountAmount)}</span></div>
+      )}
       <div className="pt-3 border-t border-neutral-800 flex justify-between items-center">
         <span className="text-sm uppercase tracking-wider font-black">Total</span>
         <span className="text-2xl font-black bg-gradient-to-r from-purple-400 to-fuchsia-400 bg-clip-text text-transparent">{dinero(venta.totalAmount)}</span>

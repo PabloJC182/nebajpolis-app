@@ -9,6 +9,7 @@ import { obtenerComida } from '@/lib/food';
 import { obtenerCines, useCine } from '@/lib/cine';
 import { hayCuenta } from '@/lib/guest';
 import AvisoComida from '@/components/AvisoComida';
+import CuponInput from '@/components/CuponInput';
 
 const panel = 'bg-[#121318]/90 border border-neutral-800/80 rounded-xl backdrop-blur-md';
 const MAX = 20;
@@ -29,6 +30,7 @@ export default function DulceriaPage() {
   const [correo, setCorreo] = useState('');
   const [nombreInv, setNombreInv] = useState('');
   const [cineId, setCineId] = useState('');
+  const [cupon, setCupon] = useState(null);
 
   useEffect(() => {
     setConCuenta(hayCuenta());
@@ -59,6 +61,8 @@ export default function DulceriaPage() {
   const pedido = comida.filter((c) => cant[c.id] > 0);
   const total = pedido.reduce((s, c) => s + c.price * cant[c.id], 0);
   const cine = cines.find((c) => c.id === cineId);
+  const descCupon = cupon?.descuento ?? 0;
+  const totalFinal = Math.max(total - descCupon, 0);
 
   const continuar = async () => {
     if (bloqueo.current) return;
@@ -68,13 +72,13 @@ export default function DulceriaPage() {
     bloqueo.current = true; setEnviando(true); setError('');
     try {
       if (!conCuenta) { try { sessionStorage.setItem('guestEmail', correo.trim()); } catch {} }
-      const venta = await crearPedidoComida(cineId, pedido.map((c) => ({ foodItemId: c.id, quantity: cant[c.id] })), conCuenta ? null : { email: correo.trim(), nombre: nombreInv.trim() });
+      const venta = await crearPedidoComida(cineId, pedido.map((c) => ({ foodItemId: c.id, quantity: cant[c.id] })), conCuenta ? null : { email: correo.trim(), nombre: nombreInv.trim() }, { couponCode: cupon?.code });
       router.push(`/pago/${venta.id}`);
     } catch (e) {
       if (e.status === 401 || e.status === 403) {
         setConCuenta(false);
         setError('Tu sesión venció. Continúa como invitado con tu correo o vuelve a iniciar sesión.');
-      } else setError(e.message);
+      } else setError(e.status === 409 && e.datos?.sinStock ? e.message + ' Baja la cantidad o quita ese producto.' : e.message);
       setEnviando(false); bloqueo.current = false;
     }
   };
@@ -114,13 +118,13 @@ export default function DulceriaPage() {
                           {c.imageUrl ? <img src={c.imageUrl} alt={c.name} className="w-full h-full object-cover" /> : '🍿'}
                         </div>
                         <div className="flex flex-col justify-between min-w-0 flex-1">
-                          <div><h3 className="font-bold text-sm truncate">{c.name}</h3><p className="text-[11px] text-gray-400 line-clamp-2">{c.description}</p></div>
+                          <div><h3 className="font-bold text-sm truncate">{c.name} {c.agotado && <span className="ml-1 text-[10px] font-bold text-red-300 bg-red-950/50 border border-red-800/50 rounded px-1.5 py-0.5 align-middle">AGOTADO</span>}{!c.agotado && c.pocas && <span className="ml-1 text-[10px] font-bold text-amber-300 bg-amber-950/40 border border-amber-800/40 rounded px-1.5 py-0.5 align-middle">QUEDAN POCAS</span>}</h3><p className="text-[11px] text-gray-400 line-clamp-2">{c.description}</p></div>
                           <div className="flex items-center justify-between">
                             <span className="font-black text-brand-400">Q{c.price}</span>
                             <div className="flex items-center gap-2">
                               <button aria-label={`Quitar ${c.name}`} onClick={() => cambiar(c.id, -1)} disabled={n === 0} className="w-7 h-7 rounded-full border border-neutral-700 flex items-center justify-center hover:border-white disabled:opacity-30"><Minus size={14} /></button>
                               <span className="w-5 text-center text-sm font-bold">{n}</span>
-                              <button aria-label={`Agregar ${c.name}`} onClick={() => cambiar(c.id, 1)} className="w-7 h-7 rounded-full bg-brand-600 flex items-center justify-center hover:bg-brand-500"><Plus size={14} /></button>
+                              <button aria-label={`Agregar ${c.name}`} disabled={c.agotado} onClick={() => cambiar(c.id, 1)} className="w-7 h-7 rounded-full bg-brand-600 flex items-center justify-center hover:bg-brand-500 disabled:opacity-30 disabled:cursor-not-allowed"><Plus size={14} /></button>
                             </div>
                           </div>
                         </div>
@@ -143,9 +147,11 @@ export default function DulceriaPage() {
               <span className="font-semibold">Q{(c.price * cant[c.id]).toFixed(2)}</span>
             </div>
           ))}
+          {descCupon > 0 && <div className="flex justify-between text-sm text-emerald-400"><span>Cupón {cupon.code}</span><span>−Q{descCupon.toFixed(2)}</span></div>}
+          {pedido.length > 0 && <CuponInput subBoletos={0} subComida={total} guestEmail={!conCuenta ? correo.trim().toLowerCase() : null} onChange={setCupon} />}
           <div className="pt-4 border-t border-neutral-800 flex justify-between items-center">
             <span className="text-xs uppercase tracking-wider text-neutral-400 font-bold">Total:</span>
-            <span className="text-2xl font-extrabold">Q{total.toFixed(2)}</span>
+            <span className="text-2xl font-extrabold">Q{totalFinal.toFixed(2)}</span>
           </div>
 
           {!conCuenta && (

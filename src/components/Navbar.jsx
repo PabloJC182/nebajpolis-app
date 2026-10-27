@@ -6,6 +6,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { Play, Search, X, Bell, LogOut } from 'lucide-react';
 import { cerrarSesion } from '@/lib/auth';
 import SelectorCine from '@/components/SelectorCine';
+import { esPersonal, inicioPara } from '@/lib/roles';
 
 const NAV_ITEMS = [
   { label: 'Inicio', href: '/' },
@@ -93,7 +94,7 @@ export default function Navbar() {
         </button>
         {usuario ? (
           <div className="flex items-center gap-3">
-            {usuario.role === 'admin' && <Link href="/admin" className="hidden sm:block text-xs font-semibold tracking-wider text-purple-300 hover:text-white">ADMIN</Link>}
+            {esPersonal(usuario.role) && <Link href={inicioPara(usuario.role)} className="hidden sm:block text-xs font-semibold tracking-wider text-purple-300 hover:text-white">{usuario.role === 'admin' ? 'ADMIN' : 'PANEL'}</Link>}
             <Link href="/perfil" className="hidden sm:block text-xs text-gray-300 hover:text-white max-w-[120px] truncate">{usuario.fullName?.split(' ')[0]}</Link>
             <button onClick={salir} className="p-2 text-gray-300 hover:text-white rounded-full hover:bg-white/10" aria-label="Cerrar sesión"><LogOut className="w-5 h-5" /></button>
           </div>

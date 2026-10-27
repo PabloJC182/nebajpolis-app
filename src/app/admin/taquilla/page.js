@@ -1,7 +1,7 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Minus, Plus } from 'lucide-react';
+import { useCallback, useEffect, useState } from 'react';
+import { Minus, Plus, Package } from 'lucide-react';
 import BotonImprimir from '@/components/BotonImprimir';
 import SeatMap from '@/components/SeatMap';
 import EntradaQR from '@/components/EntradaQR';
@@ -10,6 +10,8 @@ import { api } from '@/lib/api';
 import { EP } from '@/lib/endpoints';
 import { adaptarAsiento, lista } from '@/lib/adapters';
 import { obtenerComida } from '@/lib/food';
+import { obtenerCombos, precioLista } from '@/lib/combos';
+import CuponInput from '@/components/CuponInput';
 
 const panel = 'bg-[#121318] border border-neutral-800/80 rounded-xl';
 const campo = 'w-full bg-[#0D0E12] border border-neutral-800 rounded-lg px-3 py-2.5 text-sm outline-none focus:border-purple-500';
@@ -29,6 +31,9 @@ export default function TaquillaPage() {
   const [error, setError] = useState('');
   const [enviando, setEnviando] = useState(false);
   const [resultado, setResultado] = useState(null);
+  const [combos, setCombos] = useState([]);
+  const [comboId, setComboId] = useState('');
+  const [cupon, setCupon] = useState(null);
 
   useEffect(() => {
     api('/shows').then((r) => {
@@ -37,6 +42,7 @@ export default function TaquillaPage() {
         .sort((a, b) => new Date(a.showDatetime) - new Date(b.showDatetime)));
     }).catch((e) => setError(e.message));
     obtenerComida().then(setComida).catch(() => {});
+    obtenerCombos().then(setCombos).catch(() => {});
   }, []);
 
   const cargarAsientos = useCallback((id) => {
@@ -54,10 +60,13 @@ export default function TaquillaPage() {
     return n > 0 ? { ...resto, [id]: n } : resto;
   });
   const pedido = comida.filter((c) => cant[c.id] > 0);
-  const total = useMemo(
-    () => elegidos.length * Number(funcion?.basePrice ?? 0) + pedido.reduce((s, c) => s + c.price * cant[c.id], 0),
-    [elegidos, funcion, pedido, cant],
-  );
+  const precioBoleto = Number(funcion?.basePrice ?? 0);
+  const combo = combos.find((c) => c.id === comboId && c.ticketQty <= elegidos.length) ?? null;
+  const costoCombo = combo ? Math.min(combo.price, precioLista(combo, precioBoleto)) : 0;
+  const subBoletos = (elegidos.length - (combo?.ticketQty ?? 0)) * precioBoleto + costoCombo;
+  const subComida = pedido.reduce((s, c) => s + c.price * cant[c.id], 0);
+  const descCupon = cupon?.descuento ?? 0;
+  const total = Math.max(subBoletos + subComida - descCupon, 0);
 
   const cobrar = async () => {
     if (!funcion || elegidos.length === 0 || enviando) return;
@@ -74,17 +83,20 @@ export default function TaquillaPage() {
           guestName: cliente.nombre.trim(),
           guestEmail: cliente.correo.trim(),
           foodItems: pedido.map((c) => ({ foodItemId: Number(c.id), quantity: cant[c.id] })),
+          ...(combo ? { comboId: Number(combo.id) } : {}),
+          ...(cupon ? { couponCode: cupon.code } : {}),
         }),
       });
       setResultado(r.sale);
     } catch (e) {
       setError(e.message);
-      if (e.status === 409) { setElegidos([]); cargarAsientos(showId); }
+      if (e.status === 409 && !e.datos?.sinStock) { setElegidos([]); cargarAsientos(showId); }
+      if (e.status === 409 && e.datos?.sinStock) obtenerComida().then(setComida).catch(() => {});
     } finally { setEnviando(false); }
   };
 
   const nueva = () => {
-    setResultado(null); setElegidos([]); setCant({}); setCliente({ nombre: '', correo: '' }); setError('');
+    setResultado(null); setElegidos([]); setCant({}); setComboId(''); setCupon(null); setCliente({ nombre: '', correo: '' }); setError('');
     cargarAsientos(showId);
   };
 
@@ -132,17 +144,31 @@ export default function TaquillaPage() {
             </div>
           )}
 
+          {funcion && combos.length > 0 && (
+            <div className={`${panel} p-4`}>
+              <h2 className="text-xs uppercase tracking-wider text-neutral-400 font-bold mb-3 flex items-center gap-2"><Package size={14} /> Combo (opcional)</h2>
+              <select className={campo} value={comboId} onChange={(e) => setComboId(e.target.value)}>
+                <option value="">Sin combo</option>
+                {combos.map((c) => (
+                  <option key={c.id} value={c.id} disabled={c.ticketQty > elegidos.length}>
+                    {c.name} · {c.ticketQty} boleto(s) + {c.items.map((i) => `${i.quantity} ${i.name}`).join(', ')} · {Q(c.price)}{c.ticketQty > elegidos.length ? ' (elige más asientos)' : ''}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
           {funcion && comida.length > 0 && (
             <div className={`${panel} p-4`}>
               <h2 className="text-xs uppercase tracking-wider text-neutral-400 font-bold mb-3">Dulcería (opcional)</h2>
               <div className="grid sm:grid-cols-2 gap-2">
                 {comida.map((c) => (
                   <div key={c.id} className="flex items-center justify-between gap-2 bg-[#0D0E12] border border-neutral-800 rounded-lg px-3 py-2">
-                    <div className="min-w-0"><p className="text-sm font-semibold truncate">{c.name}</p><p className="text-xs text-brand-400">{Q(c.price)}</p></div>
+                    <div className="min-w-0"><p className="text-sm font-semibold truncate">{c.name} {c.agotado && <span className="text-[10px] text-red-300">AGOTADO</span>}{!c.agotado && c.pocas && <span className="text-[10px] text-amber-300">POCAS</span>}</p><p className="text-xs text-brand-400">{Q(c.price)}</p></div>
                     <div className="flex items-center gap-2">
                       <button onClick={() => cambiar(c.id, -1)} disabled={!cant[c.id]} className="w-7 h-7 rounded-full border border-neutral-700 flex items-center justify-center disabled:opacity-30"><Minus size={13} /></button>
                       <span className="w-5 text-center text-sm font-bold">{cant[c.id] ?? 0}</span>
-                      <button onClick={() => cambiar(c.id, 1)} className="w-7 h-7 rounded-full bg-purple-600 flex items-center justify-center"><Plus size={13} /></button>
+                      <button aria-label={`Agregar ${c.name}`} disabled={c.agotado} onClick={() => cambiar(c.id, 1)} className="w-7 h-7 rounded-full bg-purple-600 flex items-center justify-center disabled:opacity-30 disabled:cursor-not-allowed"><Plus size={13} /></button>
                     </div>
                   </div>
                 ))}
@@ -154,9 +180,12 @@ export default function TaquillaPage() {
         <aside className={`${panel} p-5 space-y-4 xl:sticky xl:top-24`}>
           <h2 className="text-xs uppercase tracking-wider text-neutral-400 font-bold">Cobro</h2>
           <div className="text-sm space-y-1">
-            <div className="flex justify-between"><span className="text-gray-300">Entradas ({elegidos.length})</span><span className="font-semibold">{Q(elegidos.length * Number(funcion?.basePrice ?? 0))}</span></div>
+            <div className="flex justify-between"><span className="text-gray-300">Entradas ({elegidos.length - (combo?.ticketQty ?? 0)})</span><span className="font-semibold">{Q((elegidos.length - (combo?.ticketQty ?? 0)) * precioBoleto)}</span></div>
+            {combo && <div className="flex justify-between"><span className="text-gray-300 truncate pr-2">1 × {combo.name}</span><span className="font-semibold">{Q(costoCombo)}</span></div>}
             {pedido.map((c) => <div key={c.id} className="flex justify-between"><span className="text-gray-300 truncate pr-2">{cant[c.id]} × {c.name}</span><span className="font-semibold">{Q(c.price * cant[c.id])}</span></div>)}
           </div>
+          {descCupon > 0 && <div className="flex justify-between text-sm text-emerald-400"><span>Cupón {cupon.code}</span><span>−{Q(descCupon)}</span></div>}
+          {funcion && elegidos.length > 0 && <CuponInput subBoletos={subBoletos} subComida={subComida} guestEmail={cliente.correo.trim().toLowerCase() || null} onChange={setCupon} bloqueado={combo ? 'Los cupones no se combinan con combos.' : null} />}
           <div className="pt-3 border-t border-neutral-800 flex justify-between items-center">
             <span className="text-xs uppercase tracking-wider text-neutral-400 font-bold">Total</span>
             <span className="text-2xl font-extrabold">{Q(total)}</span>

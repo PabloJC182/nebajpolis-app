@@ -4,9 +4,10 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { iniciarSesion, registrarse } from '@/lib/auth';
+import { inicioPara } from '@/lib/roles';
 
 // Solo rutas internas: evita redirigir a sitios externos con ?next=
-const destinoSeguro = (next, rol) => (next && next.startsWith('/') && !next.startsWith('//') ? next : rol === 'admin' ? '/admin' : '/');
+const destinoSeguro = (next, rol) => (next && next.startsWith('/') && !next.startsWith('//') ? next : inicioPara(rol));
 
 export default function LoginPage() {
   const router = useRouter();

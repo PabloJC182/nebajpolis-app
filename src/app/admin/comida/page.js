@@ -12,6 +12,7 @@ const cfg = {
     { label: 'Nombre', render: (c) => <span className="font-semibold">{c.name}</span> },
     { label: 'Categoría', render: (c) => c.category },
     { label: 'Precio', render: (c) => `Q${Number(c.price).toFixed(2)}` },
+    { label: 'Existencias', render: (c) => (c.stock === null || c.stock === undefined ? <span className="text-neutral-500">Sin control</span> : c.stock <= 0 ? <span className="text-red-300 font-bold">Agotado</span> : <span className={c.stock <= (c.stockMin ?? 5) ? 'text-amber-300 font-bold' : ''}>{c.stock}</span>) },
     { label: 'Estado', render: (c) => (c.status ? 'Disponible' : 'Oculto') },
   ],
   campos: [

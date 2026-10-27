@@ -17,5 +17,7 @@ export async function obtenerComida() {
     category: c.category || 'Otros',
     price: Number(c.price),
     imageUrl: c.imageUrl || '',
+    agotado: !!c.agotado,
+    pocas: !!c.pocas,
   }));
 }

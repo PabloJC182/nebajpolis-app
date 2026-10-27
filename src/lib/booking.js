@@ -37,7 +37,7 @@ export async function obtenerAsientos(showId) {
 }
 
 // Crea la venta (el backend bloquea los asientos). Responde { sale: { id } }
-export async function crearVenta(showId, seatIds, foodItems = [], promotionId = null, invitado = null) {
+export async function crearVenta(showId, seatIds, foodItems = [], promotionId = null, invitado = null, extra = {}) {
   if (USE_MOCK) return { id: 'mock-sale' };
   const r = await api(EP.salesCreate, {
     method: 'POST',
@@ -45,6 +45,8 @@ export async function crearVenta(showId, seatIds, foodItems = [], promotionId = 
       showId: Number(showId),
       seatIds: seatIds.map(Number),
       ...(promotionId ? { promotionId: Number(promotionId) } : {}),
+      ...(extra.comboId ? { comboId: Number(extra.comboId), comboQty: extra.comboQty || 1 } : {}),
+      ...(extra.couponCode ? { couponCode: extra.couponCode } : {}),
       foodItems: foodItems.map((f) => ({ foodItemId: Number(f.foodItemId), quantity: f.quantity })),
       ...(invitado ? { guestEmail: invitado.email, guestName: invitado.nombre } : {}),
     }),
@@ -54,11 +56,12 @@ export async function crearVenta(showId, seatIds, foodItems = [], promotionId = 
 }
 
 // Pedido solo de dulcería: se paga en línea y se recoge en el cine con un QR
-export async function crearPedidoComida(cinemaId, foodItems, invitado = null) {
+export async function crearPedidoComida(cinemaId, foodItems, invitado = null, extra = {}) {
   const r = await api('/sales/create-food', {
     method: 'POST',
     body: JSON.stringify({
       cinemaId: Number(cinemaId),
+      ...(extra.couponCode ? { couponCode: extra.couponCode } : {}),
       foodItems: foodItems.map((f) => ({ foodItemId: Number(f.foodItemId), quantity: f.quantity })),
       ...(invitado ? { guestEmail: invitado.email, guestName: invitado.nombre } : {}),
     }),
