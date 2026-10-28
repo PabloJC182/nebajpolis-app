@@ -7,7 +7,16 @@ export default function HeroMovie({ movie, onMoreInfo }) {
   return (
     <div className="relative w-full h-[68vh] md:h-[75vh] min-h-[500px] overflow-hidden flex items-center">
       <div className="absolute inset-0 z-0">
-        <img src={movie.backdrop} alt={movie.title} className="w-full h-full object-cover scale-105 brightness-90" />
+        {movie.tieneBackdrop ? (
+          <img src={movie.backdrop} alt={movie.title} fetchPriority="high" className="w-full h-full object-cover object-[70%_center] brightness-90" />
+        ) : (
+          // Sin imagen horizontal: un póster vertical estirado se ve borroso, así que se usa de fondo difuminado
+          // y se muestra nítido a la derecha.
+          <>
+            <img src={movie.backdrop} alt="" aria-hidden className="w-full h-full object-cover scale-125 blur-2xl opacity-50" />
+            <img src={movie.backdrop} alt={movie.title} className="hidden md:block absolute right-[8%] top-1/2 -translate-y-1/2 h-[78%] w-auto rounded-xl shadow-2xl shadow-black/60 border border-white/10" />
+          </>
+        )}
         <div className="absolute inset-0 bg-gradient-to-r from-ink via-ink/70 to-transparent w-full md:w-2/3" />
         <div className="absolute inset-0 bg-gradient-to-t from-ink via-ink/40 to-transparent" />
         <div className="absolute inset-0 bg-gradient-to-b from-ink/60 via-transparent to-transparent h-32" />

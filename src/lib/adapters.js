@@ -41,6 +41,7 @@ export const adaptarPelicula = (m) => {
     trailerId: youtubeId(m.trailerUrl),
     poster,
     backdrop: m.backdropUrl || m.posterUrl || SIN_IMAGEN,
+    tieneBackdrop: !!m.backdropUrl,
     category: 'trending',
     featured: false,
   };

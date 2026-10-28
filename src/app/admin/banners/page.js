@@ -17,7 +17,7 @@ const cfg = {
   campos: [
     { name: 'title', label: 'Título', required: true },
     { name: 'subtitle', label: 'Subtítulo (opcional)' },
-    { name: 'imageUrl', label: 'URL de la imagen (ideal 1920×550)', required: true },
+    { name: 'imageUrl', label: 'URL de la imagen (1920×640 px, sin texto dentro; el texto se agrega aquí)', required: true },
     { name: 'linkUrl', label: 'Enlace al hacer clic (/promociones o https://...)' },
     { name: 'buttonText', label: 'Texto del botón (por defecto "Ver más")' },
     { name: 'sortOrder', label: 'Orden (menor aparece primero)', type: 'number' },

@@ -6,7 +6,7 @@ export const EP = {
   movies: '/movies',
   moviesActivas: '/movies/activas',
   movie: (id) => `/movies/${id}`,
-  showsByMovie: (id) => `/shows?movieId=${id}`,
+  showsByMovie: (id) => `/shows?movieId=${id}&upcoming=1`,
   show: (id) => `/shows/${id}`,
   showSeats: (id) => `/shows/${id}/seats`,
   promosVigentes: '/promotions/vigentes',
