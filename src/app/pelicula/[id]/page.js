@@ -29,12 +29,12 @@ export default async function PeliculaPage({ params }) {
   return (
     <main className="relative z-10 pb-20">
       <div className="relative h-[50vh] min-h-[360px]">
-        <img src={movie.backdrop} alt={movie.title} className="absolute inset-0 w-full h-full object-cover opacity-50" />
-        <div className="absolute inset-0 bg-gradient-to-t from-ink via-ink/60 to-transparent" />
+        <img src={movie.backdrop} alt={movie.title} className="absolute inset-0 w-full h-full object-cover opacity-40" />
+        <div className="absolute inset-0 bg-gradient-to-t from-ink via-ink/70 to-transparent" />
         <div className="absolute bottom-8 px-6 md:px-12 space-y-2">
-          <h1 className="text-4xl md:text-6xl font-black">{movie.title}</h1>
+          <h1 className="text-4xl md:text-6xl font-black leading-tight pb-1">{movie.title}</h1>
           {proxima && (
-            <p className="inline-block text-[11px] font-black tracking-wider bg-gradient-to-r from-fuchsia-600 to-purple-600 px-3 py-1 rounded-full">
+            <p className="inline-block mt-4 mb-1 text-[11px] font-black tracking-wider bg-gradient-to-r from-fuchsia-600 to-purple-600 px-3 py-1 rounded-full">
               {funciones.length > 0 ? `PREVENTA · ESTRENO ${estreno.toUpperCase()}` : `PRÓXIMAMENTE · ESTRENO ${estreno.toUpperCase()}`}
             </p>
           )}
