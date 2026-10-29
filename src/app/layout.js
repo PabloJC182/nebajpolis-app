@@ -1,6 +1,7 @@
 import './globals.css';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import SesionInactiva from '@/components/SesionInactiva';
 
 export const metadata = {
   title: 'Nebajpolis | Cartelera y boletos en línea',
@@ -16,6 +17,7 @@ export default function RootLayout({ children }) {
         <Navbar />
         {children}
         <Footer />
+        <SesionInactiva />
       </body>
     </html>
   );

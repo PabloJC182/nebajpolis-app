@@ -7,7 +7,7 @@ export const esPersonal = (rol) => ['admin', 'taquilla', 'analista'].includes(ro
 // Páginas del panel que ve cada rol (admin: todas)
 const PERMISOS = {
   taquilla: ['/admin/taquilla', '/admin/validar', '/admin/corte'],
-  analista: ['/admin', '/admin/reportes', '/admin/corte'],
+  analista: ['/admin', '/admin/reportes'],
 };
 
 export const puedeVer = (rol, ruta) => {

@@ -93,8 +93,8 @@ export default function AdminResumen() {
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <Tarjeta destacado label="Ingresos (pagadas)" valor={Q(s.totales.ingresos)} sub={`${s.totales.ventasPagadas} ventas${s.totales.ingresosTaquilla ? ` · taquilla ${Q(s.totales.ingresosTaquilla)}` : ''}`} />
-        <Tarjeta label="Boletos vendidos" valor={s.boletos.total} sub={`${s.boletos.usados} ya usados en sala`} />
+        <Tarjeta destacado label={`Ingresos (últimos ${dias} días)`} valor={Q(s.totales.ingresos)} sub={`${s.totales.ventasPagadas} ventas${s.totales.ingresosTaquilla ? ` · taquilla ${Q(s.totales.ingresosTaquilla)}` : ''}`} />
+        <Tarjeta label={`Boletos vendidos (${dias} días)`} valor={s.boletos.total} sub={`${s.boletos.usados} ya usados en sala`} />
         <Tarjeta label="Pendientes de pago" valor={s.totales.pendientes} sub={s.totales.reembolsos ? `${s.totales.reembolsos} reembolso(s) · ${Q(s.totales.montoReembolsado)}` : undefined} />
         <Tarjeta label="Clientes" valor={s.totales.clientes} />
       </div>
@@ -119,11 +119,11 @@ export default function AdminResumen() {
 
       <div className="grid md:grid-cols-2 gap-6">
         <section className="bg-[#121318] border border-neutral-800/80 rounded-xl p-5">
-          <h2 className="text-xs uppercase tracking-wider text-neutral-400 font-bold mb-4">Películas más vendidas</h2>
+          <h2 className="text-xs uppercase tracking-wider text-neutral-400 font-bold mb-4">{`Películas más vendidas (${dias} días)`}</h2>
           <ListaBarras items={s.topPeliculas} etiqueta={(p) => p.title} valor={(p) => p.boletos} formato={(p) => `${p.boletos} boletos · ${Q(p.ingresos)}`} vacio="Aún no hay ventas pagadas." />
         </section>
         <section className="bg-[#121318] border border-neutral-800/80 rounded-xl p-5">
-          <h2 className="text-xs uppercase tracking-wider text-neutral-400 font-bold mb-4">Comida más vendida</h2>
+          <h2 className="text-xs uppercase tracking-wider text-neutral-400 font-bold mb-4">{`Comida más vendida (${dias} días)`}</h2>
           <ListaBarras items={s.topComida} etiqueta={(c) => c.name} valor={(c) => c.unidades} formato={(c) => `${c.unidades} uds · ${Q(c.ingresos)}`} vacio="Aún no hay ventas de comida." />
         </section>
         <section className="bg-[#121318] border border-neutral-800/80 rounded-xl p-5">
@@ -132,7 +132,7 @@ export default function AdminResumen() {
             valor={(o) => (o.capacidad ? o.vendidos / o.capacidad : 0)} formato={(o) => `${o.vendidos}/${o.capacidad}`} vacio="No hay funciones próximas." />
         </section>
         <section className="bg-[#121318] border border-neutral-800/80 rounded-xl p-5">
-          <h2 className="text-xs uppercase tracking-wider text-neutral-400 font-bold mb-4">Ventas por estado</h2>
+          <h2 className="text-xs uppercase tracking-wider text-neutral-400 font-bold mb-4">{`Ventas por estado (${dias} días)`}</h2>
           <ListaBarras items={s.porEstado} etiqueta={(e) => ESTADOS[e.status] ?? e.status} valor={(e) => e.total} formato={(e) => e.total} vacio="Sin ventas." />
         </section>
       </div>

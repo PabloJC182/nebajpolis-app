@@ -4,18 +4,19 @@ import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { MapPin, Phone, Armchair, Film } from 'lucide-react';
-import { obtenerCines, obtenerSalasPorCine, guardarCine } from '@/lib/cine';
+import { obtenerCines, obtenerCinesConFunciones, obtenerSalasPorCine, guardarCine } from '@/lib/cine';
 
 export default function CinesPage() {
   const router = useRouter();
   const [cines, setCines] = useState([]);
   const [salas, setSalas] = useState({});
+  const [conFunciones, setConFunciones] = useState(null); // ids de cines con funciones por venir
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState('');
 
   useEffect(() => {
-    Promise.all([obtenerCines(), obtenerSalasPorCine()])
-      .then(([c, s]) => { setCines(c); setSalas(s); })
+    Promise.all([obtenerCines(), obtenerSalasPorCine(), obtenerCinesConFunciones()])
+      .then(([c, s, cf]) => { setCines(c); setSalas(s); setConFunciones(new Set(cf.map((x) => x.id))); })
       .catch((e) => setError(e.message))
       .finally(() => setCargando(false));
   }, []);
@@ -56,7 +57,9 @@ export default function CinesPage() {
                       {[...new Set(s.map((r) => r.type))].map((t) => <span key={t} className="px-2 py-1 rounded-full bg-purple-500/10 border border-purple-500/30 text-purple-200 font-bold">{t}</span>)}
                     </div>
                     <div className="flex items-center gap-4 mt-auto pt-1">
-                      <button onClick={() => verCartelera(c.id)} className="px-4 py-2 rounded-full bg-gradient-to-r from-purple-600 to-fuchsia-600 text-xs font-bold uppercase tracking-wider">Ver cartelera</button>
+                      {conFunciones && !conFunciones.has(c.id)
+                        ? <span className="px-4 py-2 rounded-full border border-neutral-700 text-xs font-bold uppercase tracking-wider text-gray-500">Sin funciones por ahora</span>
+                        : <button onClick={() => verCartelera(c.id)} className="px-4 py-2 rounded-full bg-gradient-to-r from-purple-600 to-fuchsia-600 text-xs font-bold uppercase tracking-wider">Ver cartelera</button>}
                       {(c.address || c.name) && (
                         <a href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent([c.name, c.address, c.city].filter(Boolean).join(', '))}`} target="_blank" rel="noopener noreferrer" className="text-xs font-bold uppercase tracking-wider text-purple-300 hover:text-white">Cómo llegar</a>
                       )}

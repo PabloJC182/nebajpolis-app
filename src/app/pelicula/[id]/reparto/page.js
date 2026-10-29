@@ -3,7 +3,9 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { ChevronUp, ChevronDown, ArrowLeft, Clapperboard, User } from 'lucide-react';
+import Link from 'next/link';
 import { obtenerReparto } from '@/lib/movies';
+import { api } from '@/lib/api';
 
 const fechaNac = (d) => (d ? new Date(d).toLocaleDateString('es-GT', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' }) : '—');
 
@@ -29,6 +31,29 @@ function Miembro({ m, activo, onSelect }) {
         <span className="block text-[11px] text-neutral-400 truncate">{m.role}</span>
       </div>
       {activo && <div className="w-2 h-2 rounded-full bg-purple-500 shadow-[0_0_8px_rgba(168,85,247,0.9)] mr-2 animate-pulse" />}
+    </div>
+  );
+}
+
+function Filmografia({ personaId }) {
+  const [pelis, setPelis] = useState(null);
+  useEffect(() => {
+    let vivo = true;
+    setPelis(null);
+    api(`/persons/${personaId}`).then((p) => vivo && setPelis(p.movies ?? [])).catch(() => vivo && setPelis([]));
+    return () => { vivo = false; };
+  }, [personaId]);
+  if (!pelis) return null;
+  return (
+    <div className="max-w-xl">
+      <span className="text-[10px] uppercase font-bold text-neutral-500 tracking-wider block mb-2">Películas ({pelis.length})</span>
+      <div className="flex flex-wrap gap-2">
+        {pelis.map((f) => (
+          <Link key={f.id} href={`/pelicula/${f.id}`} className="text-xs bg-[#121318]/80 border border-neutral-800/80 hover:border-purple-500 rounded-lg px-3 py-1.5">
+            {f.title}{f.movieCast?.role ? <span className="text-neutral-500"> · {f.movieCast.role}</span> : null}
+          </Link>
+        ))}
+      </div>
     </div>
   );
 }
@@ -60,6 +85,7 @@ function Detalle({ m, titulo, animando }) {
           </div>
         ))}
       </div>
+      <Filmografia personaId={m.id} />
     </div>
   );
 }

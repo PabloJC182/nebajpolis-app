@@ -32,6 +32,9 @@ export const adaptarPelicula = (m) => {
     tagline: m.originalLanguage ? `Idioma original: ${m.originalLanguage}` : '',
     year: m.releaseDate ? new Date(m.releaseDate).getUTCFullYear() : '',
     releaseDate: m.releaseDate ?? '',
+    country: m.country ?? '',
+    subtitles: m.subtitles ?? '',
+    language: m.originalLanguage ?? '',
     rating: m.rating,
     duration: dur(m.durationMinutes),
     genres: (m.genres ?? []).map((g) => g.name ?? g),
@@ -66,6 +69,7 @@ export const adaptarFuncion = (s) => {
     month: MESES[parseInt(diaGT(f).slice(5, 7), 10) - 1],
     time: f.toLocaleTimeString('es-GT', { hour: 'numeric', minute: '2-digit', timeZone: TZ }),
     format: s.format ?? '',
+    promoIds: (s.promotions ?? []).map((p) => String(p.id)),
     pricePerSeat: Number(s.basePrice ?? 0),
     currency: 'Q',
   };

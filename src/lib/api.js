@@ -31,7 +31,12 @@ export async function api(ruta, opciones = {}) {
   }
   const datos = await respuesta.json().catch(() => ({}));
   if (!respuesta.ok) {
-    if (respuesta.status === 401 && typeof window !== 'undefined') localStorage.removeItem('token');
+    if (respuesta.status === 401 && typeof window !== 'undefined') {
+      // Si había sesión iniciada, el token venció: se avisa en el login en lugar de fallar en silencio
+      const habiaSesion = !!localStorage.getItem('token');
+      localStorage.removeItem('token');
+      if (habiaSesion && !window.location.pathname.startsWith('/login')) window.location.assign('/login?expirada=1');
+    }
     const error = new Error(datos.message || `Error ${respuesta.status} en ${opciones.method ?? 'GET'} ${API_URL}${ruta}`);
     error.status = respuesta.status;
     error.datos = datos;

@@ -33,6 +33,15 @@ export async function obtenerCines() {
     .sort((a, b) => a.city.localeCompare(b.city) || a.name.localeCompare(b.name));
 }
 
+// Solo los cines que tienen al menos una función por venir (para todos los selectores de lugar).
+// Si no se pueden consultar las funciones, se devuelven todos para no dejar el selector vacío.
+export async function obtenerCinesConFunciones() {
+  const [cines, funciones] = await Promise.all([obtenerCines(), api('/shows?upcoming=1').then(lista).catch(() => null)]);
+  if (!funciones) return cines;
+  const conFunciones = new Set(funciones.map((f) => String(f.room?.cinema?.id ?? f.room?.cinemaId ?? '')));
+  return cines.filter((c) => conFunciones.has(c.id));
+}
+
 // Salas agrupadas por id de cine
 export async function obtenerSalasPorCine() {
   const porCine = {};

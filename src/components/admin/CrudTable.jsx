@@ -13,8 +13,8 @@ export const aLocal = (d) => {
   return new Date(x.getTime() - x.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
 };
 
-function Campo({ c, valor, onChange, opciones }) {
-  const base = { id: c.name, required: c.required, className: inputCls };
+function Campo({ c, valor, onChange, opciones, form }) {
+  const base = { id: c.name, required: c.required, className: inputCls, ...(c.min ? { min: c.min(form) } : {}) };
   if (c.type === 'textarea') return <textarea {...base} rows={3} value={valor ?? ''} onChange={(e) => onChange(e.target.value)} />;
   if (c.type === 'checkbox')
     return <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={!!valor} onChange={(e) => onChange(e.target.checked)} /> Activo</label>;
@@ -109,7 +109,7 @@ export default function CrudTable({ cfg, onContexto }) {
           <thead>
             <tr className="text-left text-[11px] uppercase tracking-wider text-neutral-400 border-b border-neutral-800">
               {cfg.columnas.map((c) => <th key={c.label} className="px-4 py-3 font-bold">{c.label}</th>)}
-              {(cfg.actualizar || cfg.eliminar || cfg.acciones) && <th className="px-4 py-3" />}
+              {(cfg.actualizar || cfg.eliminar || cfg.acciones) && <th className="px-4 py-3 sticky right-0 bg-[#121318]" />}
             </tr>
           </thead>
           <tbody>
@@ -119,7 +119,7 @@ export default function CrudTable({ cfg, onContexto }) {
                 <tr key={it.id} className="border-b border-neutral-800/60 last:border-0 hover:bg-white/[0.02]">
                   {cfg.columnas.map((c) => <td key={c.label} className="px-4 py-3 align-top">{c.render(it)}</td>)}
                   {(cfg.actualizar || cfg.eliminar || cfg.acciones) && (
-                    <td className="px-4 py-3 whitespace-nowrap text-right">
+                    <td className="px-4 py-3 whitespace-nowrap text-right sticky right-0 bg-[#121318] shadow-[-8px_0_8px_-6px_rgba(0,0,0,0.6)]">
                       {(cfg.acciones ?? []).filter((a) => a.mostrar(it)).map((a) => (
                         <button key={a.label} onClick={() => a.onClick(it, { recargar: cargar, avisar: setAviso, error: setError })}
                           className="px-2.5 py-1 mr-1 rounded-md border border-neutral-700 text-[11px] font-bold uppercase tracking-wider text-gray-300 hover:text-white hover:border-white">{a.label}</button>
@@ -144,7 +144,7 @@ export default function CrudTable({ cfg, onContexto }) {
             {cfg.campos.map((c) => (
               <div key={c.name}>
                 {c.type !== 'checkbox' && <label htmlFor={c.name} className="block text-xs font-bold text-neutral-300 uppercase tracking-wider mb-1.5">{c.label}</label>}
-                <Campo c={c} valor={form[c.name]} opciones={opciones[c.name]} onChange={(v) => setForm((p) => ({ ...p, [c.name]: v }))} />
+                <Campo c={c} form={form} valor={form[c.name]} opciones={opciones[c.name]} onChange={(v) => setForm((p) => ({ ...p, [c.name]: v }))} />
               </div>
             ))}
             {error && <p className="text-sm text-red-400">{error}</p>}

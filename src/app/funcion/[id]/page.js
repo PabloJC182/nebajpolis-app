@@ -5,7 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { X, Calendar, Clock, Film } from 'lucide-react';
 import { hayCuenta } from '@/lib/guest';
-import { promoElegida, aplicaEnDia, diasTexto } from '@/lib/promotions';
+import { promoElegida, aplicaEnFuncion, diasTexto } from '@/lib/promotions';
 import { obtenerFuncion, obtenerAsientos } from '@/lib/booking';
 import SeatMap from '@/components/SeatMap';
 
@@ -102,7 +102,7 @@ export default function FuncionPage() {
   const toggle = (s) => setSelectedIds((p) => (p.includes(s.id) ? p.filter((x) => x !== s.id) : [...p, s.id]));
   const elegidos = seats.filter((s) => selectedIds.includes(s.id));
   const bruto = elegidos.length * (funcion?.pricePerSeat ?? 0);
-  const promoAplica = !!promo && !!funcion && aplicaEnDia(promo, funcion.dayKey);
+  const promoAplica = !!promo && !!funcion && aplicaEnFuncion(promo, funcion);
   const total = promoAplica ? bruto * (1 - promo.discount / 100) : bruto;
 
   const continuar = () => {

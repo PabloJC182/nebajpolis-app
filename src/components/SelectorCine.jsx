@@ -2,14 +2,18 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { MapPin } from 'lucide-react';
-import { obtenerCines, useCine } from '@/lib/cine';
+import { obtenerCinesConFunciones, useCine } from '@/lib/cine';
 
-// Selector de cine agrupado por ciudad. El valor elegido filtra la cartelera y las funciones.
+// Selector de cine agrupado por ciudad (solo cines con funciones por venir). El valor elegido filtra la cartelera y las funciones.
 export default function SelectorCine({ className = '' }) {
   const [cines, setCines] = useState([]);
   const [cineId, setCine] = useCine();
+  const [listo, setListo] = useState(false);
 
-  useEffect(() => { obtenerCines().then(setCines).catch(() => {}); }, []);
+  useEffect(() => { obtenerCinesConFunciones().then((c) => { setCines(c); setListo(true); }).catch(() => {}); }, []);
+
+  // Si el cine guardado ya no tiene funciones (o ya no existe), se vuelve a "Todos los cines" para no mostrar una cartelera vacía
+  useEffect(() => { if (listo && cineId && !cines.some((c) => c.id === cineId)) setCine(''); }, [listo, cines, cineId, setCine]);
 
   const ciudades = useMemo(() => {
     const m = new Map();

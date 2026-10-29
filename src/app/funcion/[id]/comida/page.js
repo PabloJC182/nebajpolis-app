@@ -5,7 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { ArrowLeft, Minus, Plus, Package } from 'lucide-react';
 import { obtenerFuncion, crearVenta } from '@/lib/booking';
 import { obtenerComida } from '@/lib/food';
-import { promoElegida, limpiarPromo, aplicaEnDia, diasTexto } from '@/lib/promotions';
+import { promoElegida, limpiarPromo, aplicaEnFuncion, diasTexto } from '@/lib/promotions';
 import { hayCuenta } from '@/lib/guest';
 import AvisoComida from '@/components/AvisoComida';
 import CuponInput from '@/components/CuponInput';
@@ -13,7 +13,7 @@ import { obtenerCombos, precioLista } from '@/lib/combos';
 import Link from 'next/link';
 
 const panel = 'bg-[#121318]/90 border border-neutral-800/80 rounded-xl backdrop-blur-md';
-const MAX = 20;
+const MAX = 10; // maximo por producto
 
 export default function ComidaPage() {
   const { id } = useParams();
@@ -74,12 +74,12 @@ export default function ComidaPage() {
   const costoCombo = combo ? Math.min(combo.price * vecesOk, precioLista(combo, precioBoleto) * vecesOk) : 0;
   const bruto = precioBoleto * (asientos.length - boletosCombo);
   // La promo solo cuenta si la función cae en un día en que aplica (el back lo valida igual); no se combina con combo ni cupón
-  const promoAplica = !!promo && !!funcion && aplicaEnDia(promo, funcion.dayKey) && !combo && !cupon;
+  const promoAplica = !!promo && !!funcion && aplicaEnFuncion(promo, funcion) && !combo && !cupon;
   const descuento = promoAplica ? bruto * (promo.discount / 100) : 0;
   const totalBoletos = bruto - descuento + costoCombo;
   const descCupon = cupon?.descuento ?? 0;
   const totalFinal = Math.max(totalBoletos + totalComida - descCupon, 0);
-  const promoVigenteHoy = !!promo && !!funcion && aplicaEnDia(promo, funcion.dayKey);
+  const promoVigenteHoy = !!promo && !!funcion && aplicaEnFuncion(promo, funcion);
 
   const continuar = async (omitir = false) => {
     if (bloqueo.current) return;
@@ -203,7 +203,7 @@ export default function ComidaPage() {
                         <div className="flex items-center gap-2">
                           <button onClick={() => cambiar(c.id, -1)} disabled={n === 0} className="w-7 h-7 rounded-full border border-neutral-700 flex items-center justify-center hover:border-white disabled:opacity-30"><Minus size={14} /></button>
                           <span className="w-5 text-center text-sm font-bold">{n}</span>
-                          <button aria-label={`Agregar ${c.name}`} disabled={c.agotado} onClick={() => cambiar(c.id, 1)} className="w-7 h-7 rounded-full bg-brand-600 flex items-center justify-center hover:bg-brand-500 disabled:opacity-30 disabled:cursor-not-allowed"><Plus size={14} /></button>
+                          <button aria-label={`Agregar ${c.name}`} disabled={c.agotado || n >= MAX} onClick={() => cambiar(c.id, 1)} className="w-7 h-7 rounded-full bg-brand-600 flex items-center justify-center hover:bg-brand-500 disabled:opacity-30 disabled:cursor-not-allowed"><Plus size={14} /></button>
                         </div>
                       </div>
                     </div>

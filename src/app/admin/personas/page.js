@@ -10,6 +10,7 @@ const cfg = {
   columnas: [
     { label: 'Foto', render: (p) => p.photoUrl ? <img src={p.photoUrl} alt="" className="w-10 h-12 object-cover rounded" /> : '—' },
     { label: 'Nombre', render: (p) => <span className="font-semibold">{p.fullName}</span> },
+    { label: 'Películas', render: (p) => <span className="font-bold tabular-nums">{p.movieCount ?? 0}</span> },
     { label: 'Nacimiento', render: (p) => p.birthDate ? new Date(p.birthDate).toLocaleDateString('es-GT', { timeZone: 'UTC' }) : '—' },
     { label: 'Biografía', render: (p) => <span className="text-gray-400 line-clamp-2 max-w-xs block">{p.biography || '—'}</span> },
   ],

@@ -22,6 +22,8 @@ const cfg = {
     { name: 'releaseDate', label: 'Fecha de estreno', type: 'date' },
     { name: 'rating', label: 'Clasificación (ej. B, B15, C)' },
     { name: 'originalLanguage', label: 'Idioma original' },
+    { name: 'country', label: 'País de origen' },
+    { name: 'subtitles', label: 'Subtítulos (ej. Español, Inglés)' },
     { name: 'posterUrl', label: 'URL del póster' },
     { name: 'backdropUrl', label: 'URL del fondo' },
     { name: 'trailerUrl', label: 'URL del tráiler (YouTube)' },
@@ -32,7 +34,7 @@ const cfg = {
   aFormulario: (m) => ({ ...m, releaseDate: m.releaseDate ? String(m.releaseDate).slice(0, 10) : '', genreIds: (m.genres ?? []).map((g) => g.id) }),
   aPayload: (f) => ({
     title: f.title, synopsis: f.synopsis, durationMinutes: Number(f.durationMinutes),
-    releaseDate: f.releaseDate || null, rating: f.rating, originalLanguage: f.originalLanguage,
+    releaseDate: f.releaseDate || null, rating: f.rating, originalLanguage: f.originalLanguage, country: f.country, subtitles: f.subtitles,
     posterUrl: f.posterUrl, backdropUrl: f.backdropUrl, trailerUrl: f.trailerUrl || null, status: !!f.status, genreIds: (f.genreIds ?? []).map(Number),
   }),
   crear: (p) => api('/movies/create/', { method: 'POST', body: json(p) }),

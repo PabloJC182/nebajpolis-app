@@ -9,9 +9,19 @@ export const diasTexto = (dias = []) => {
   const d = dias.map((n) => NOMBRES[n]);
   return d.length <= 1 ? d[0] ?? '' : `${d.slice(0, -1).join(', ')} y ${d[d.length - 1]}`;
 };
+const sinTildes = (t) => String(t || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+// Días en que aplica: los configurados; si no hay, se deducen del nombre ("Martes 2x1" -> martes) para no cobrarla en otros días
+export const diasEfectivos = (nombre, dias) => {
+  const d = diasLista(dias);
+  if (d.length) return d;
+  const t = sinTildes(nombre);
+  return NOMBRES.map((n, i) => (new RegExp(`\\b${sinTildes(n)}s?\\b`).test(t) ? i : -1)).filter((i) => i >= 0);
+};
 const diaSemana = (dayKey) => new Date(`${dayKey}T12:00:00Z`).getUTCDay();
 // ¿La promo aplica a una función de ese día (YYYY-MM-DD, hora de Guatemala)?
 export const aplicaEnDia = (promo, dayKey) => !promo?.validDays?.length || promo.validDays.includes(diaSemana(dayKey));
+// Si la funcion tiene promociones asignadas, solo aplican esas; si no, aplica por vigencia y dia
+export const aplicaEnFuncion = (promo, funcion) => !!funcion && aplicaEnDia(promo, funcion.dayKey) && (!funcion.promoIds?.length || funcion.promoIds.includes(String(promo?.id)));
 export const aplicaHoy = (promo) => aplicaEnDia(promo, diaGT(new Date()));
 
 const MOCK = [
@@ -27,13 +37,13 @@ export async function obtenerPromociones() {
     discount: Number(p.discountPercentage),
     validFrom: p.validFrom,
     validTo: p.validTo,
-    validDays: diasLista(p.validDays),
+    validDays: diasEfectivos(p.name, p.validDays),
   }));
 }
 
 // Promoción elegida por el usuario (se aplica en la siguiente compra)
 export const promoElegida = () => {
-  try { return JSON.parse(localStorage.getItem('promo') || 'null'); } catch { return null; }
+  try { const p = JSON.parse(localStorage.getItem('promo') || 'null'); return p ? { ...p, validDays: diasEfectivos(p.name, p.validDays) } : null; } catch { return null; }
 };
 export const elegirPromo = (p) => { try { localStorage.setItem('promo', JSON.stringify({ id: p.id, name: p.name, discount: p.discount, validDays: p.validDays ?? [] })); } catch {} };
 export const limpiarPromo = () => { try { localStorage.removeItem('promo'); } catch {} };

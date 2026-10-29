@@ -39,6 +39,9 @@ export default async function PeliculaPage({ params }) {
             </p>
           )}
           <p className="text-sm text-gray-300">{[movie.year, movie.rating, movie.duration, movie.genres.join(', ')].filter(Boolean).join(' • ')}</p>
+          {(movie.language || movie.country || movie.subtitles) && (
+            <p className="text-xs text-gray-400 mt-1">{[movie.language && `Idioma: ${movie.language}`, movie.subtitles && `Subtítulos: ${movie.subtitles}`, movie.country && `País: ${movie.country}`].filter(Boolean).join(' • ')}</p>
+          )}
         </div>
       </div>
       <div className="px-6 md:px-12 grid md:grid-cols-3 gap-8 mt-8">

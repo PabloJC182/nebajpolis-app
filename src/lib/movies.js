@@ -8,7 +8,12 @@ import { obtenerFuncionesProximas } from '@/lib/booking';
 export async function obtenerPeliculas() {
   if (USE_MOCK) return MOVIES_DATA;
   // Las de fecha de estreno futura van en "Próximamente", no en cartelera
-  return lista(await api(EP.moviesActivas)).map(adaptarPelicula).filter((m) => !esProxima(m));
+  const [peliculas, funciones] = await Promise.all([api(EP.moviesActivas), obtenerFuncionesProximas().catch(() => null)]);
+  const base = lista(peliculas).map(adaptarPelicula).filter((m) => !esProxima(m));
+  if (!funciones) return base; // si no se pudieron consultar las funciones, no se oculta nada
+  // En cartelera solo entran películas con al menos una función por venir (las de funciones ya pasadas se ocultan)
+  const conFunciones = new Set(funciones.map((f) => f.movieId));
+  return base.filter((m) => conFunciones.has(m.id));
 }
 
 export const esProxima = (m) => !!m.releaseDate && String(m.releaseDate).slice(0, 10) > diaGT(new Date());

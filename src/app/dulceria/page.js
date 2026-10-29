@@ -6,13 +6,13 @@ import Link from 'next/link';
 import { Minus, Plus, MapPin } from 'lucide-react';
 import { crearPedidoComida } from '@/lib/booking';
 import { obtenerComida } from '@/lib/food';
-import { obtenerCines, useCine } from '@/lib/cine';
+import { obtenerCinesConFunciones, useCine } from '@/lib/cine';
 import { hayCuenta } from '@/lib/guest';
 import AvisoComida from '@/components/AvisoComida';
 import CuponInput from '@/components/CuponInput';
 
 const panel = 'bg-[#121318]/90 border border-neutral-800/80 rounded-xl backdrop-blur-md';
-const MAX = 20;
+const MAX = 10; // maximo por producto
 
 // Dulcería como sección propia: pedido solo de comida, se paga en línea y se recoge en el cine con un QR
 export default function DulceriaPage() {
@@ -35,7 +35,7 @@ export default function DulceriaPage() {
   useEffect(() => {
     setConCuenta(hayCuenta());
     try { setCorreo(sessionStorage.getItem('guestEmail') || ''); } catch {}
-    Promise.all([obtenerComida(), obtenerCines()])
+    Promise.all([obtenerComida(), obtenerCinesConFunciones()])
       .then(([c, ci]) => { setComida(c); setCines(ci); })
       .catch((e) => setError(e.message))
       .finally(() => setCargando(false));
@@ -124,7 +124,7 @@ export default function DulceriaPage() {
                             <div className="flex items-center gap-2">
                               <button aria-label={`Quitar ${c.name}`} onClick={() => cambiar(c.id, -1)} disabled={n === 0} className="w-7 h-7 rounded-full border border-neutral-700 flex items-center justify-center hover:border-white disabled:opacity-30"><Minus size={14} /></button>
                               <span className="w-5 text-center text-sm font-bold">{n}</span>
-                              <button aria-label={`Agregar ${c.name}`} disabled={c.agotado} onClick={() => cambiar(c.id, 1)} className="w-7 h-7 rounded-full bg-brand-600 flex items-center justify-center hover:bg-brand-500 disabled:opacity-30 disabled:cursor-not-allowed"><Plus size={14} /></button>
+                              <button aria-label={`Agregar ${c.name}`} disabled={c.agotado || n >= MAX} onClick={() => cambiar(c.id, 1)} className="w-7 h-7 rounded-full bg-brand-600 flex items-center justify-center hover:bg-brand-500 disabled:opacity-30 disabled:cursor-not-allowed"><Plus size={14} /></button>
                             </div>
                           </div>
                         </div>

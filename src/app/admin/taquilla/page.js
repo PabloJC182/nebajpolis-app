@@ -55,7 +55,7 @@ export default function TaquillaPage() {
   const funcion = funciones.find((f) => String(f.id) === String(showId));
   const toggle = (s) => setElegidos((p) => (p.includes(s.id) ? p.filter((x) => x !== s.id) : [...p, s.id]));
   const cambiar = (id, d) => setCant((p) => {
-    const n = Math.min(20, Math.max(0, (p[id] ?? 0) + d));
+    const n = Math.min(10, Math.max(0, (p[id] ?? 0) + d));
     const { [id]: _, ...resto } = p;
     return n > 0 ? { ...resto, [id]: n } : resto;
   });
@@ -168,7 +168,7 @@ export default function TaquillaPage() {
                     <div className="flex items-center gap-2">
                       <button onClick={() => cambiar(c.id, -1)} disabled={!cant[c.id]} className="w-7 h-7 rounded-full border border-neutral-700 flex items-center justify-center disabled:opacity-30"><Minus size={13} /></button>
                       <span className="w-5 text-center text-sm font-bold">{cant[c.id] ?? 0}</span>
-                      <button aria-label={`Agregar ${c.name}`} disabled={c.agotado} onClick={() => cambiar(c.id, 1)} className="w-7 h-7 rounded-full bg-purple-600 flex items-center justify-center disabled:opacity-30 disabled:cursor-not-allowed"><Plus size={13} /></button>
+                      <button aria-label={`Agregar ${c.name}`} disabled={c.agotado || (cant[c.id] ?? 0) >= 10} onClick={() => cambiar(c.id, 1)} className="w-7 h-7 rounded-full bg-purple-600 flex items-center justify-center disabled:opacity-30 disabled:cursor-not-allowed"><Plus size={13} /></button>
                     </div>
                   </div>
                 ))}

@@ -14,6 +14,9 @@ export default function LoginPage() {
   const [modo, setModo] = useState('login');
   const [f, setF] = useState({ fullName: '', email: '', password: '', phone: '' });
   const [error, setError] = useState('');
+  const [inactiva, setInactiva] = useState(false);
+  const [expirada, setExpirada] = useState(false);
+  useEffect(() => { try { const q = new URLSearchParams(window.location.search); setInactiva(q.get('inactividad') === '1'); setExpirada(q.get('expirada') === '1'); } catch {} }, []);
   const [cargando, setCargando] = useState(false);
   useEffect(() => { if (new URLSearchParams(window.location.search).get('modo') === 'registro') setModo('registro'); }, []);
   const set = (k) => (e) => setF({ ...f, [k]: e.target.value });
@@ -46,6 +49,8 @@ export default function LoginPage() {
         <input className={campo} type="email" placeholder="Correo" value={f.email} onChange={set('email')} required />
         <input className={campo} type="password" placeholder={modo === 'registro' ? 'Contraseña (mínimo 8 caracteres)' : 'Contraseña'} value={f.password} onChange={set('password')} required minLength={modo === 'registro' ? 8 : undefined} />
         {modo === 'login' && <Link href="/recuperar" className="block text-right text-xs text-purple-300 hover:text-white">¿Olvidaste tu contraseña?</Link>}
+        {inactiva && !error && <p className="text-sm text-amber-300">Tu sesión se cerró por inactividad. Inicia sesión de nuevo para continuar.</p>}
+        {expirada && !inactiva && !error && <p className="text-sm text-amber-300">Tu sesión venció. Inicia sesión de nuevo para continuar.</p>}
         {error && <p className="text-sm text-red-400">{error}</p>}
         <button disabled={cargando} className="w-full py-3 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 font-bold text-sm tracking-wider disabled:opacity-50">
           {cargando ? 'Enviando...' : modo === 'login' ? 'INGRESAR' : 'REGISTRARME'}

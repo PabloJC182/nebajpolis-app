@@ -22,6 +22,26 @@ const presets = () => {
   ];
 };
 
+function EfectividadPromos({ promos, base }) {
+  if (!promos?.length) return <p className="text-sm text-gray-500">Ninguna promoción usada en este periodo.</p>;
+  const ref = base?.precioPromedio ?? 0;
+  return (
+    <div className="space-y-3">
+      {promos.map((p) => {
+        const dif = ref ? (p.precioPromedio - ref) / ref : null;
+        return (
+          <div key={p.id} className="border border-neutral-800 rounded-lg p-3">
+            <p className="font-bold text-sm">{p.name}</p>
+            <p className="text-xs text-gray-400 mt-1">{p.usos} uso(s) · {p.boletos} boleto(s) · {Q(p.ingresos)} ingresos</p>
+            <p className="text-xs text-gray-400">Descuento otorgado {Q(p.descuento)} · precio promedio {Q(p.precioPromedio)}{dif !== null ? ` (${dif >= 0 ? '+' : ''}${(dif * 100).toFixed(0)}% vs. sin promoción)` : ''}</p>
+          </div>
+        );
+      })}
+      {base && <p className="text-[11px] text-neutral-500">Sin promoción: {base.boletos} boleto(s) · precio promedio {Q(base.precioPromedio)}.</p>}
+    </div>
+  );
+}
+
 export default function ReportesPage() {
   const [f, setF] = useState(() => ({ desde: sumarDias(hoyGT(), -29), hasta: hoyGT(), cineId: '', peliculaId: '', canal: '', tipo: '' }));
   const [r, setR] = useState(null);
@@ -89,6 +109,28 @@ export default function ReportesPage() {
       {error && <p className="text-sm text-red-400">{error}</p>}
       {!r ? !error && <p className="text-gray-400">Cargando reporte...</p> : (
         <div className={`space-y-6 transition-opacity ${cargando ? 'opacity-50' : ''}`} aria-busy={cargando}>
+          {k.ventas === 0 && (
+            <p className="text-sm bg-amber-500/10 border border-amber-500/30 text-amber-200 rounded-lg px-4 py-3">
+              No hay ventas pagadas en este periodo. Prueba con “Últimos 30 días” o “Este mes” para ver tendencias.
+            </p>
+          )}
+
+          <div>
+            <h2 className="text-lg font-black tracking-tight">Indicadores clave</h2>
+            <p className="text-xs text-gray-500 mt-0.5">Películas más vistas, horarios de mayor demanda y efectividad de promociones, según el filtro elegido.</p>
+          </div>
+          <div className="grid lg:grid-cols-3 gap-6">
+            <Seccion titulo="1 · Películas más vistas" derecha={<span className="text-[11px] text-neutral-500">por boletos</span>}>
+              <ListaBarras items={r.porPelicula} etiqueta={(p) => p.title} valor={(p) => p.boletos} formato={(p) => `${p.boletos} boletos · ${Q(p.ingresos)}`} vacio="Sin boletos vendidos en este periodo." />
+            </Seccion>
+            <Seccion titulo="2 · Horarios de mayor demanda" derecha={<span className="text-[11px] text-neutral-500">boletos por día y hora</span>}>
+              <MapaHorarios datos={r.porHorario} />
+            </Seccion>
+            <Seccion titulo="3 · Efectividad de promociones">
+              <EfectividadPromos promos={r.promociones} base={r.sinPromo} />
+            </Seccion>
+          </div>
+
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             <Tarjeta destacado label="Ingresos netos" valor={Q(k.ingresos)} sub={`${k.ventas} venta(s) · promedio ${Q(k.ticketPromedio)}`} />
             <Tarjeta label="Boletos vendidos" valor={k.boletos} sub={`${Q(k.ingresosBoletos)} · ${k.usados} usados · ${k.noShow} sin usar (función pasada)`} />
@@ -107,10 +149,6 @@ export default function ReportesPage() {
           </Seccion>
 
           <div className="grid lg:grid-cols-2 gap-6">
-            <Seccion titulo="Películas (ingresos de boletos)">
-              <ListaBarras items={r.porPelicula} etiqueta={(p) => p.title} valor={(p) => p.ingresos} formato={(p) => `${p.boletos} boletos · ${Q(p.ingresos)}`} />
-            </Seccion>
-            <Seccion titulo="Horarios fuertes (boletos por día y hora de la función)"><MapaHorarios datos={r.porHorario} /></Seccion>
             <Seccion titulo="Por cine">
               <ListaBarras items={r.porCine} etiqueta={(c) => c.name} valor={(c) => c.ingresos} formato={(c) => `${c.ventas} ventas · ${Q(c.ingresos)}`} />
             </Seccion>
@@ -126,12 +164,10 @@ export default function ReportesPage() {
             <Seccion titulo="Combos vendidos">
               <ListaBarras items={r.combos ?? []} etiqueta={(c) => c.name} valor={(c) => c.ventas} formato={(c) => `${c.ventas} ventas · ${Q(c.ingresos)}`} vacio="Ningún combo vendido en este periodo." />
             </Seccion>
-            <Seccion titulo="Promociones usadas">
-              <ListaBarras items={r.promociones} etiqueta={(p) => p.name} valor={(p) => p.usos} formato={(p) => `${p.usos} usos · −${Q(p.descuento)}`} vacio="Ninguna promoción usada (o sin registro previo a esta versión)." />
-            </Seccion>
           </div>
 
           <Seccion titulo={`Ocupación por función (${ocupacion.length})`} derecha={<span className="text-[11px] text-neutral-500">de menor a mayor</span>}>
+            <p className="text-xs text-gray-500 mb-3">Se miden las funciones que ocurren dentro del periodo (por la fecha de la función, no de la compra). Las ventas de hoy para funciones futuras aparecen cuando llegue esa fecha.</p>
             {ocupacion.length === 0 ? <p className="text-sm text-gray-500">No hay funciones en este periodo.</p> : (
               <div className="max-h-96 overflow-auto">
                 <table className="w-full text-sm">
